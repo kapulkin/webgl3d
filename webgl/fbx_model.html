@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Three.js FBX Loader Demo</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
+                "FBXLoader": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/loaders/FBXLoader.js",
+                "three/addons/": "https://unpkg.com/three@0.155.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<script type="module">
+    import * as THREE from 'three';
+    import { FBXLoader } from 'FBXLoader';
+     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    let scene, camera, renderer, controls;
+
+    init();
+    animate();
+
+    function init() {
+        scene = new THREE.Scene();
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);  // White ambient light at half intensity
+        scene.add(ambientLight);
+
+        // Add a directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);  // White directional light at half intensity
+        directionalLight.position.set(0, 1, 1);  // Set the direction (from where the light is coming)
+        scene.add(directionalLight);
+
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        controls = new OrbitControls(camera, renderer.domElement);
+
+        // Optional: Set some properties if desired
+        controls.enableDamping = true; // Enable mouse friction / damping
+        controls.dampingFactor = 0.25;
+        controls.enableZoom = true;   // Enable zooming
+        controls.enablePan = true;    // Enable panning
+        controls.enableRotate = true; // Enable rotating
+
+        controls.update();
+
+        // Load the FBX model
+        let loader = new FBXLoader();
+        loader.setPath('../55-rp_nathan_animated_003_walking_fbx/');  // Assuming your .fbx and textures are here.
+        loader.load('rp_nathan_animated_003_walking.fbx',
+            object => {
+                scene.add(object);
+
+                const box = new THREE.Box3().setFromObject(object);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                // Use the bounding box size to set the camera position. 
+                // Here we're moving the camera back by a factor of the max dimension of the bounding box.
+                // You can adjust this factor (e.g., size.max() * 2) to your preference.
+                camera.position.set(center.x, center.y, center.z + 3 * size.z);
+                // camera.lookAt(center);
+                controls.update();
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+            },
+            (error) => {
+                console.log(error)
+            }            
+        );
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+</script>
+</body>
+</html>

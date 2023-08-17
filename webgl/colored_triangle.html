@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Triangle with Colorful Vertices</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 50px auto;
+        }
+    </style>
+</head>
+<body>
+<canvas id="triangleCanvas" width="800" height="600"></canvas>
+<script>
+    let canvas = document.getElementById('triangleCanvas');
+    let gl = canvas.getContext('webgl');
+
+    if (!gl) {
+        alert('WebGL is not supported in this browser.');
+        throw new Error('WebGL not supported');
+    }
+
+    let vertexShaderSource = `
+        attribute vec4 position;
+        attribute vec4 color;
+        varying vec4 vColor;
+        void main(void) {
+            gl_Position = position;
+            vColor = color;
+        }
+    `;
+
+    let fragmentShaderSource = `
+        precision mediump float;
+        varying vec4 vColor;
+        void main(void) {
+            gl_FragColor = vColor;
+        }
+    `;
+
+    let vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexShaderSource);
+    gl.compileShader(vertexShader);
+
+    let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentShaderSource);
+    gl.compileShader(fragmentShader);
+
+    let program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    // Vertices with color data: X, Y, R, G, B
+    let triangleVertices = new Float32Array([
+        0.0,  0.75, 1.0, 0.0, 0.0, // Top vertex (Red)
+       -0.5, 0.0, 0.0, 1.0, 0.0, // Bottom-left vertex (Green)
+        0.5, 0.0, 0.0, 0.0, 1.0,  // Bottom-right vertex (Blue)
+
+        -0.0,  -0.75, 1.0, 1.0, 0.0, // Bottom vertex (Yellow)
+       -0.5, 0.0, 0.0, 1.0, 0.0, // Bottom-left vertex (Green)
+        0.5, 0.0, 0.0, 0.0, 1.0  // Bottom-right vertex (Blue)
+    ]);
+
+
+    triangleVertices = new Float32Array([
+        0.0,  0.75, 1.0, 0.0, 0.0, // Top vertex (Red)
+        -0.0,  -0.75, 1.0, 1.0, 0.0, // Bottom vertex (Yellow)
+        0.5, 0.0, 0.0, 0.0, 1.0,  // Bottom-right vertex (Blue)
+
+        0.0,  0.75, 1.0, 0.0, 0.0, // Top vertex (Red)
+        -0.0,  -0.75, 1.0, 1.0, 0.0, // Bottom vertex (Yellow)
+       -0.5, 0.0, 0.0, 1.0, 0.0, // Bottom-left vertex (Green)
+    ]);
+
+    let triangleVertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, triangleVertices, gl.STATIC_DRAW);
+
+    let position = gl.getAttribLocation(program, 'position');
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 20, 0);
+
+    let color = gl.getAttribLocation(program, 'color');
+    gl.enableVertexAttribArray(color);
+    gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 20, 8);
+
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+</script>
+</body>
+</html>
